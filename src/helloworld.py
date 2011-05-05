@@ -4,6 +4,7 @@ import os
 import time
 import re
 import urllib
+import urllib2
 import sys
 from BeautifulSoup import BeautifulSoup
 from google.appengine.api import urlfetch
@@ -14,52 +15,23 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 from django.utils import simplejson as json
- 
 
-class result(db.Model):
-    url = db.TextProperty()
-    data =db.TextProperty()
+
+
+
+#def fetchHtml(url):
+#    r = urllib2.Request(url)
+#    r.add_header('User-Agent', 'Mozilla 5.0')
+#    page = urllib2.urlopen(r)
+#    return page
+    
 
 class MainPage(webapp.RequestHandler):
     
     
     def get(self):
-    
-        if self.request.get('queue')!=None:
-            taskqueue.add(url="/",method='POST')
-            self.response.out.write('in queue')
+        self.response.out.write('吳明珠中醫診所API')
 
-
-            
-    def post(self):
-        web_url = 'http://wumingchu.tcm.tw/webreg.php?tp=reg2_1&id=&ip=&bno=F127659156&bday=780925'
-        urlrequest = urlfetch.fetch(url=web_url, deadline=10)
-
-        res = result()
-        res.url = web_url
-        res.data = unicode(urlrequest.content,'big5')
-        res.put()
-        
-
-#        name_str = urllib.quote(name.encode('big5'))
-#        urlstr = 'http://wumingchu.tcm.tw/webreg.php?tp=reg1_1&id=&ip=&pname='+name_str+'&bno=F155350337&bday=0780925&tel=02-29047059'
-#        urlrequest = urlfetch.fetch(url=urlstr,deadline=10)
-#        self.response.out.write(urlrequest.content)
-        
-        
-#_max_fetch_count = 10
-#
-#def fetch(url, payload=None, method=urlfetch.GET,
-#headers={}, allow_truncated=False, follow_redirects=True,
-#deadline=10, validate_certificate=None):
-#    http_body=''
-#    for count in range(_max_fetch_count):
-#        try:
-#            http_body = urlfetch.fetch(url, payload, method, headers, allow_truncated, follow_redirects, deadline, validate_certificate)    
-#            return http_body
-#        except urlfetch.DownloadError, e:
-#            continue
-#    raise Exception('Max fetch count exceeded.')
         
 class deptPage(webapp.RequestHandler):     
     
@@ -81,7 +53,7 @@ class deptPage(webapp.RequestHandler):
             
             #search time
             
-            urlrequest =  urlfetch.fetch(url='http://wumingchu.tcm.tw/webreg.php?tp=reg2_1&id=&ip=&bno=F127659156&bday=780925',deadline=10,allow_truncated=True)
+            urlrequest =  urlfetch.fetch(url='http://cmed.ktop.com.tw/webreg.php?tp=reg2_1&id=3801201475&ip=10.241.61.113&bno=F127659156&bday=780925',deadline=10,allow_truncated=True)
             soup = BeautifulSoup(urlrequest.content)
             date_and_doctors = soup.findAll('a', href=re.compile(r'\/webreg\.php\?tp=reg2_2'))
             date_and_doctors_title = []
@@ -142,7 +114,7 @@ class doctorPage(webapp.RequestHandler):
             array_doctor.append({"1":unicode('吳明珠', 'utf-8')})
             
             #search time把那一頁的資料fetch下來 然後取出哪些時段有醫生
-            urlrequest = urlfetch.fetch(url='http://wumingchu.tcm.tw/webreg.php?tp=reg2_1&id=&ip=&bno=F127659156&bday=780925&x=41&y=7',deadline=10)
+            urlrequest = urlfetch.fetch(url='http://cmed.ktop.com.tw/webreg.php?tp=reg2_1&id=3801201475&ip=10.241.61.113&bno=F127659156&bday=780925&x=41&y=7',deadline=10)
             soup = BeautifulSoup(urlrequest.content)
             date_and_doctors = soup.findAll('a', href=re.compile(r'\/webreg\.php\?tp=reg2_2'))
             date_and_doctors_title = []
@@ -235,7 +207,7 @@ class registerPage(webapp.RequestHandler):
                 
                 if table_fill:
                     name_str = urllib.quote(name.encode('big5'))
-                    urlstr = 'http://wumingchu.tcm.tw/webreg.php?tp=reg1_1&id=&ip=&pname='+name_str+'&bno='+bno+'&bday='+bday+'&tel='+tel
+                    urlstr = 'http://cmed.ktop.com.tw/webreg.php?tp=reg1_1&id=3801201475&ip=10.241.61.113&pname='+name_str+'&bno='+bno+'&bday='+bday+'&tel='+tel
                     urlfetch.fetch(url=urlstr,deadline=10)
 #        birthday = '1989-09-25' 
 #        time = '2011-05-06-B'             
@@ -247,7 +219,7 @@ class registerPage(webapp.RequestHandler):
             
         if table_fill:  
             #register2 
-            registerUrl='http://wumingchu.tcm.tw/webreg.php?tp=reg2_1&id=&ip='+'&bno='+bno+'&bday='+ bday
+            registerUrl='http://cmed.ktop.com.tw/webreg.php?tp=reg2_1&id=3801201475&ip=10.241.61.113'+'&bno='+bno+'&bday='+ bday
             result = urlfetch.fetch(url=registerUrl,deadline=10) 
         
             #把醫生的連結都soup出來
@@ -268,11 +240,11 @@ class registerPage(webapp.RequestHandler):
                         self.response.out.write(unicode('您所輸入的日期沒有對應的醫生','utf-8'))
             else:    
             #日期沒有輸入錯誤的話 就會幫使用者選到醫生 接著就在把網頁fetch出來 取出診號 在弄成json格式傳出去
-                registerUrl = 'http://wumingchu.tcm.tw'+doctor_link[doctor_number]['href'][0:12]+'tp=reg2_3'+doctor_link[doctor_number]['href'][21:]
+                registerUrl = 'http://cmed.ktop.com.tw'+doctor_link[doctor_number]['href'][0:12]+'tp=reg2_3'+doctor_link[doctor_number]['href'][21:]
                 result3=urlfetch.fetch(url = registerUrl,deadline = 10)
                 soup = BeautifulSoup(result3.content)
                 number = soup.find('span','txt06')
-                dic = {'ststus':'0','message':number.string[6:]}
+                dic = {'ststus':'0','message':number.string[12:]}
                 jsonResult = json.dumps(dic,ensure_ascii=False)
                 self.response.out.write(jsonResult)
         else:
@@ -315,7 +287,7 @@ class cancleRegisterPage(webapp.RequestHandler):
         if table_fill:
             #find cancle_register url 
             #feach 輸入身分證以及生日之後進入的網頁 裡面有一個包含有hisid的link把他，用soup取得他之後我們就可以進入完成取消掛號的那一頁
-            cancleregisterUrl='http://wumingchu.tcm.tw/webreg.php?tp=reg4_1&id=&ip='+'&bno='+bno+'&bday='+ bday
+            cancleregisterUrl='http://cmed.ktop.com.tw/webreg.php?tp=reg4_1&id=3801201475&ip=10.241.61.113'+'&bno='+bno+'&bday='+ bday
             result = urlfetch.fetch(url = cancleregisterUrl,deadline = 10)
             soup = BeautifulSoup(result.content)
             cancle_links = soup.findAll('a',href=re.compile(r'hisid'))
@@ -329,14 +301,21 @@ class cancleRegisterPage(webapp.RequestHandler):
                 self.response.out.write('你沒有在這個日期掛號')
             else:
                 #cancle_register 進入完成取消掛號的那一頁之後取得他的取消完成資訊 確認無誤後就把json格式的狀態碼傳出去
-                cancleregisterUrl = 'http://wumingchu.tcm.tw'+cancle_link[0:12]+'tp=reg4_3'+cancle_link[21:]
-                result2 = urlfetch.fetch(url = cancleregisterUrl,deadline = 10)
-                soup = BeautifulSoup(result2.content)
-                cancle_message_cls = soup.find('center','txt20')
-                if cancle_message_cls.next.string =='取消網路掛號成功':
-                    dic = {'ststus':'0'}
-                    jsonResult = json.dumps(dic,ensure_ascii=False)
-                    self.response.out.write(jsonResult)
+                cancleregisterUrl = 'http://cmed.ktop.com.tw'+cancle_link[0:12]+'tp=reg4_3'+cancle_link[21:]
+                urlfetch.fetch(url = cancleregisterUrl,deadline = 10)
+                dic = {'ststus':'0'}
+                jsonResult = json.dumps(dic,ensure_ascii=False)
+                self.response.out.write(jsonResult)
+#                #cancle_register 進入完成取消掛號的那一頁之後取得他的取消完成資訊 確認無誤後就把json格式的狀態碼傳出去
+#                cancleregisterUrl = 'http://cmed.ktop.com.tw'+cancle_link[0:12]+'tp=reg4_3'+cancle_link[21:]
+#                result2 = urlfetch.fetch(url = cancleregisterUrl,deadline = 10)
+#                soup = BeautifulSoup(result2.content)
+#                cancle_message_cls = soup.find('center')
+#                
+#                if cancle_message_cls.next.string == '取消網路掛號成功':  
+#                    dic = {'ststus':'0'}
+#                    jsonResult = json.dumps(dic,ensure_ascii=False)
+#                    self.response.out.write(jsonResult)
         else: 
             dic = {'ststus':'2','message':table_array}
             jsonResult = json.dumps(dic,ensure_ascii=False)
